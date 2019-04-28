@@ -1303,7 +1303,6 @@ var SyscallsLibrary = {
     var old = SYSCALLS.getStreamFromFD();
     return FS.open(old.path, old.flags, 0).fd;
   },
-  __syscall42__deps: ['$PIPEFS'],
   __syscall42: function(which, varargs) { // pipe
 #if BROWSIX
     if (ENVIRONMENT_IS_BROWSIX) {
@@ -1525,7 +1524,7 @@ var SyscallsLibrary = {
   __syscall97: function(which, varargs) { // setpriority
     return -ERRNO_CODES.EPERM;
   },
-  __syscall102__deps: ['$SOCKFS', '$DNS', '_read_sockaddr', '_write_sockaddr'],
+  __syscall102__deps: ['$DNS', '_read_sockaddr', '_write_sockaddr'],
   __syscall102: function(which, varargs) { // socketcall
     var call = SYSCALLS.get(), socketvararg = SYSCALLS.get();
     // socketcalls pass the rest of the arguments in a struct
@@ -2386,6 +2385,16 @@ var SyscallsLibrary = {
     return 0; // advice is welcome, but ignored
   },
   __syscall220: function(which, varargs) { // SYS_getdents64
+#if BROWSIX
+    if (ENVIRONMENT_IS_BROWSIX) {
+      // XXX empterpretify
+      SYSCALLS.varargs = varargs;
+      let SYS_GETDENTS64 = 220;
+      let fd = SYSCALLS.get(), dirp = SYSCALLS.get(), count = SYSCALLS.get();
+      return SYSCALLS.browsix.syscall.sync(SYS_GETDENTS64, fd, dirp, count);
+    }
+#endif
+
     var stream = SYSCALLS.getStreamFromFD(), dirp = SYSCALLS.get(), count = SYSCALLS.get();
     if (!stream.getdents) {
       stream.getdents = FS.readdir(stream.path);
