@@ -2389,8 +2389,8 @@ var SyscallsLibrary = {
     if (ENVIRONMENT_IS_BROWSIX) {
       // XXX empterpretify
       SYSCALLS.varargs = varargs;
-      let SYS_GETDENTS64 = 220;
-      let fd = SYSCALLS.get(), dirp = SYSCALLS.get(), count = SYSCALLS.get();
+      var SYS_GETDENTS64 = 220;
+      var fd = SYSCALLS.get(), dirp = SYSCALLS.get(), count = SYSCALLS.get();
       return SYSCALLS.browsix.syscall.sync(SYS_GETDENTS64, fd, dirp, count);
     }
 #endif
