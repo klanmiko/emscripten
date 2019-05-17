@@ -1461,7 +1461,7 @@ def create_receiving_decls(function_table_data, function_tables_defs, exported_i
   receiving_decls = '\n'
   if shared.Settings.ASSERTIONS:
     receiving_decls = [f for f in exported_implemented_functions if f not in ('_memcpy', '_memset', '_emscripten_replace_memory', '__start_module')]
-    receiving_decls = '\n'.join('var real_' + s + ';' for s in receiving)
+    receiving_decls = '\n'.join('var real_' + s + ';' for s in receiving_decls)
   receiving_decls += '\n'
 
   receiving_decls += '\n'.join(['var ' + s + ';' for s in exported_implemented_functions + function_tables(function_table_data)])
@@ -1484,10 +1484,10 @@ def create_receiving(function_table_data, function_tables_defs, exported_impleme
   assert(runtimeInitialized, 'you need to wait for the runtime to be ready (e.g. wait for main() to be called)');
   assert(!runtimeExited, 'the runtime was exited (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
 '''
-    receiving = [f for f in exported_implemented_functions if f not in ('_memcpy', '_memset', '_emscripten_replace_memory', '__start_module')]
-    receiving = '\n'.join('real_' + s + ' = asm["' + s + '"]; asm["' + s + '''"] = function() {''' + runtime_assertions + '''  return real_''' + s + '''.apply(null, arguments);
+    r = [f for f in exported_implemented_functions if f not in ('_memcpy', '_memset', '_emscripten_replace_memory', '__start_module')]
+    receiving += '\n'.join('real_' + s + ' = asm["' + s + '"]; asm["' + s + '''"] = function() {''' + runtime_assertions + '''  return real_''' + s + '''.apply(null, arguments);
 };
-''' for s in receiving)
+''' for s in r)
 
   if not shared.Settings.SWAPPABLE_ASM_MODULE:
     receiving += ';\n'.join([s + ' = Module["' + s + '"] = asm["' + s + '"]' for s in exported_implemented_functions + function_tables(function_table_data)])

@@ -2685,8 +2685,7 @@ class Building(object):
 
   @staticmethod
   def get_binaryen_feature_flags():
-    # start with the MVP features, add the rest as needed
-    ret = ['--mvp-features']
+    ret = []
     if Settings.USE_PTHREADS:
       ret += ['--enable-threads']
     if Settings.SIMD:
