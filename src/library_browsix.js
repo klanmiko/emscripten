@@ -14,7 +14,6 @@ var BrowsixLibrary = {
 
       exports.async = true;
       exports.waitOff = -1;
-      exports.syncMsg = {};
 
       exports.SHM_SIZE = {{{ BROWSIX_SHM_SIZE }}};
       exports.shm = null;
@@ -238,25 +237,36 @@ var BrowsixLibrary = {
         USyscalls.prototype.sync = function (trap, a1, a2, a3, a4, a5, a6) {
           var waitOff = BROWSIX.browsix.waitOff;
           var waitOff32 = waitOff >> 2;
-          BROWSIX.browsix.shm32[waitOff + 1] = trap|0;
-          BROWSIX.browsix.shm32[waitOff + 2] = a1|0;
-          BROWSIX.browsix.shm32[waitOff + 3] = a2|0;
-          BROWSIX.browsix.shm32[waitOff + 4] = a3|0;
-          BROWSIX.browsix.shm32[waitOff + 5] = a4|0;
-          BROWSIX.browsix.shm32[waitOff + 6] = a5|0;
-          BROWSIX.browsix.shm32[waitOff + 7] = a6|0;
-          BROWSIX.browsix.shm32[waitOff + 8] = 0;
+	  // Consider removing arguments from shared memory since arguments are passed in message
+          BROWSIX.browsix.shm32[waitOff32 + 1] = trap|0;
+          BROWSIX.browsix.shm32[waitOff32 + 2] = a1|0;
+          BROWSIX.browsix.shm32[waitOff32 + 3] = a2|0;
+          BROWSIX.browsix.shm32[waitOff32 + 4] = a3|0;
+          BROWSIX.browsix.shm32[waitOff32 + 5] = a4|0;
+          BROWSIX.browsix.shm32[waitOff32 + 6] = a5|0;
+          BROWSIX.browsix.shm32[waitOff32 + 7] = a6|0;
+          BROWSIX.browsix.shm32[waitOff32 + 8] = 0;
 
           Atomics.store(BROWSIX.browsix.shm32, waitOff32, 0);
-          self.postMessage(BROWSIX.browsix.syncMsg);
+          self.postMessage({
+	    trap: trap|0,
+            args: [
+              a1|0,
+              a2|0,
+              a3|0,
+	      a4|0,
+              a5|0,
+	      a6|0
+            ]
+	  });
           /* var paranoid = Atomics.load(BROWSIX.browsix.shm32, waitOff >> 2)|0;
            * if (paranoid !== 1 && paranoid !== 0) {
            *   Module.printErr('WARN: someone wrote over our futex alloc(' + waitOff + '): ' + paranoid);
            *   debugger;
            * } */
           Atomics.wait(BROWSIX.browsix.shm32, waitOff32, 0);
-          BROWSIX.browsix.shm32[waitOff32] = 0;
-          return BROWSIX.browsix.shm32[waitOff32 + 8];
+          Atomics.store(BROWSIX.browsix.shm32, waitOff32, 0);
+          return Atomics.load(BROWSIX.browsix.shm32, waitOff32 + 1);
         };
         USyscalls.prototype.usleep = function(useconds) {
           // int usleep(useconds_t useconds);
